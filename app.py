@@ -2,7 +2,7 @@ from crypt import methods
 from distutils.log import debug
 from flask import Flask, request, render_template, redirect, jsonify, flash, session
 from flask_debugtoolbar   import DebugToolbarExtension
-from models import db, connectdb, User , Post, Tag
+from models import db, connectdb, User , Post, Tag , PostTag
 
 
 app = Flask(__name__)
@@ -104,14 +104,15 @@ def create_post(user_id):
     title = request.form["title"]
     content = request.form["content"]
     tags = request.form.getlist("tag")
+    all_tags = Tag.get_tags(tags)
     if request.form['btnSubmit'] == 'add':
         new_post = Post(title = title, content=content, user_id=user_id)
         db.session.add(new_post)
         db.session.commit()
-        print(tags)
+        #print(tags)
 
-        for tag in tags:
-            new_post.postTags.append(int(tag))
+        for tag in all_tags:
+            new_post.postTags.append(tag)
             
         db.session.commit()
         #new_post= Post.add_new_post(title,content, user_id)
@@ -124,8 +125,9 @@ def create_post(user_id):
 @app.route('/users/<int:post_id>/posts/edit', methods=['POST'])
 def manage_post(post_id):
     post =  Post.detail_post(post_id)
+    tags = Tag.query.all()
     if request.form['subm_button'] == 'edit':
-        return render_template("edit_post.html", post=post)
+        return render_template("edit_post.html", post=post, tags=tags)
     elif request.form['subm_button'] == 'delete':
         Post.delete_post(post_id)  
         return redirect('/posts')
@@ -138,13 +140,22 @@ def manage_post(post_id):
 def edit_post(post_id):
     title = request.form["title"]
     content = request.form["content"]
- 
-    if request.form['btn_submit'] == 'edit':
+    tags = request.form.getlist("tag")
+    all_tags = Tag.get_tags(tags)
+    PostTag.delete_post_tag(post_id)
+    
+    if request.form['editbtn_submit'] == 'edit':
         Post.edit_post(post_id,title, content)
+        my_post = Post.query.get(post_id)
+        for tag in all_tags:
+            my_post.postTags.append(tag)
+            
+        db.session.commit()    
         return redirect("/posts")
     else:
         return redirect('/posts')
 
+ 
 
 @app.route('/tags')
 def display_tags():
@@ -168,5 +179,27 @@ def create_tag():
 @app.route('/tags/<int:tag_id>')    
 def show_tag(tag_id):
     """Show info on a single tag."""
-    tag = Tag.detail_tag(tag_id)
-    return render_template("tag.html", tag=tag)
+    tags = Tag.detail_tag(tag_id)
+    return render_template("tag.html", tags=tags)
+ 
+
+@app.route('/tags/<int:tag_id>/edit', methods=['POST'])   
+def edit_tag(tag_id):
+    """edit a new tag"""
+
+    tag =  Tag.detail_tag(tag_id)
+    if request.form['btnSubmit'] == 'edit':
+        return render_template("edit_tag.html", tag=tag)
+    else:
+        Tag.delete_tag(tag_id)  
+        return redirect('/tags')
+
+@app.route('/tags/<int:tag_id>/update', methods=['POST'])
+def update_tag(tag_id):
+    name = request.form["name"]
+ 
+    if request.form['btnSubmit'] == 'edit':
+        Tag.edit_tag(tag_id ,name)
+        return redirect("/tags")
+    else:
+        return redirect('/tags')

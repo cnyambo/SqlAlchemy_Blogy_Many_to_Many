@@ -8,13 +8,18 @@
 <div class="container"  >
     <br><br><br><br>
 
-
+    
     <div class="row" style="background-color: white; padding: 20px;">
-            
-        <h1>{{post.title}}!</h1>
+         <h1>Posts</h1>   
+        <h2>{{post.title}}!</h2>
         <p>{{post.content}}</p>
-        <p>By {{post.usr.first_name}}  {{post.usr.last_name}}</p>
-       
+        <p>By {{post.usr.first_name}}  {{post.usr.last_name}} on {{post.created_at.strftime('%a %b %d %Y, %I:%M %p')}}</p>
+        <p><b>Tags:</b>
+            {% for tag in post.postTags%}
+                <span class="p-3 mb-2 bg-primary text-white">{{tag.name}}</span>&nbsp;&nbsp;&nbsp;
+            {% endfor %}
+        </p>
+
         <form action="/users/{{post.id}}/posts/edit" method="post">
             <button type="submit" class="btn btn-outline-info" name="subm_button" value="cancel">Cancel</button>
             <button type="submit" class="btn btn-primary" name="subm_button" value="edit">Edit</button>

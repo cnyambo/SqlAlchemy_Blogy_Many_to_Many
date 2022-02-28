@@ -32,6 +32,8 @@ class Tag(db.Model):
 
     id= db.Column(db.Integer, primary_key = True, autoincrement =True)    
     name = db.Column(db.String(50), nullable=False, unique=True)
+    assignments = db.relationship('PostTag',
+                                backref='tag')
     
     @classmethod
     def recent_tags(cls):
@@ -44,8 +46,28 @@ class Tag(db.Model):
         db.session.add(new_tag)
         db.session.commit()         
     @classmethod
-    def detail_tag(cls, tag_id):
-        return Tag.query.filter_by(id =tag_id).first()
+    def detail_tag(cls, tag_id):  
+        return  Tag.query.filter_by(id =tag_id).first()
+
+    @classmethod
+    def get_tags(cls, tags):
+        all_tags = []
+        for tag in tags:
+            all_tags.append(Tag.query.filter_by(id =tag).first())
+        return  all_tags  
+
+    @classmethod
+    def delete_tag(cls, tag_id):
+        PostTag.query.filter_by(tag_id=tag_id).delete()
+        Tag.query.filter_by(id =tag_id).delete()
+        db.session.commit()             
+
+    @classmethod
+    def edit_tag(cls, tag_id, name):
+        tag = Tag.query.get_or_404(tag_id)
+        tag.name = name
+        db.session.add(tag)
+        db.session.commit()
 
 class Post(db.Model):
     """Post table creation"""
@@ -57,6 +79,8 @@ class Post(db.Model):
     created_at  = db.Column(db.DateTime, default=func.now())
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))  
     usr = db.relationship('User', backref='posts')
+    assignments = db.relationship('PostTag',
+                                  backref='post')
     postTags = db.relationship('Tag', secondary='posts_tags', backref='posts')
     
 
@@ -70,7 +94,8 @@ class Post(db.Model):
  
     @classmethod
     def delete_post(cls, post_id):
-        Post.query.filter_by(id =post_id).delete()
+        PostTag.delete_post_tag(post_id)
+        Post.query.filter_by(id =post_id).delete()   
         db.session.commit()
     @classmethod
     def add_new_post(cls, title, content,user_id):
@@ -96,6 +121,7 @@ class Post(db.Model):
         return post
 
 
+
      
 class PostTag(db.Model):
     """PostTag table creation"""
@@ -108,3 +134,8 @@ class PostTag(db.Model):
     tag_id = db.Column(db.Integer,
                           db.ForeignKey("tags.id"),
                           primary_key=True)    
+
+    @classmethod
+    def delete_post_tag(cls, post_id):
+        PostTag.query.filter_by(post_id= post_id).delete()
+        db.session.commit()

@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title%}
+    List of Tags
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <br><br><br><br>
+    <div class="row" style="background-color: white; padding: 20px;">
+        <h1>{{tags.name}}</h1>
+        <ul>
+            {% for post in tags.posts%}    
+            
+            <li><a href="/posts/{{ post.id }}"><span>{{post.title}}</span></a></li>
+            
+            {% endfor %}
+        </ul>
+        <h3>
+        <form action="/tags/{{ tags.id }}/edit" method="post">
+            <button type="submit" class="btn btn-success" name="btnSubmit" value="edit">Edit</button>
+            <button type="submit" class="btn btn-info" name="btnSubmit" value="delete">Delete</button>
+            
+            
+        </form> 
+        </h3> 
+    </div>  
+</div>        
+{% endblock %}
